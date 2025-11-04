@@ -356,7 +356,7 @@ class KanadeModel(nn.Module):
     @classmethod
     def from_pretrained(
         cls,
-        repo_id: str | None,
+        repo_id: str | None = None,
         revision: str | None = None,
         config_path: str | None = None,
         weights_path: str | None = None,
