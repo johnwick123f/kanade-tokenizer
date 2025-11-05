@@ -152,7 +152,7 @@ class KanadeModel(nn.Module):
             )
             logger.debug(f"Using Conv1DTranspose for mel upsampling with factor {config.mel_upsample_factor}")
 
-    def _calculate_waveform_padding(self, audio_length: int) -> int:
+    def _calculate_waveform_padding(self, audio_length: int, ensure_recon_length: bool = False) -> int:
         """Calculate required padding for input waveform to ensure consistent SSL feature lengths."""
         extractor = self.ssl_feature_extractor
         sample_rate = self.config.sample_rate
@@ -160,6 +160,9 @@ class KanadeModel(nn.Module):
         num_samples_after_resampling = audio_length / sample_rate * extractor.ssl_sample_rate
         # We expect the SSL feature extractor to be consistent with its hop size
         expected_ssl_output_length = math.ceil(num_samples_after_resampling / extractor.hop_size)
+        # If ensure_recon_length is True, we want to make sure the output length is exactly divisible by downsample factor
+        if ensure_recon_length and (remainder := expected_ssl_output_length % self.downsample_factor) != 0:
+            expected_ssl_output_length += self.downsample_factor - remainder
         # But it may require more input samples to produce that output length, so calculate the required input length
         num_samples_required_after_resampling = extractor.get_minimum_input_length(expected_ssl_output_length)
         # That number of samples is at the SSL sample rate, so convert back to our original sample rate
@@ -329,9 +332,13 @@ class KanadeModel(nn.Module):
 
     # ======== Inference methods ========
 
-    def weights_to_save(self) -> dict[str, torch.Tensor]:
+    def weights_to_save(self, *, include_modules: list[str]) -> dict[str, torch.Tensor]:
         """Get model weights for saving. Excludes certain modules not needed for inference."""
-        excluded_modules = ["ssl_feature_extractor", "feature_decoder", "conv_upsample"]
+        excluded_modules = [
+            m
+            for m in ["ssl_feature_extractor", "feature_decoder", "conv_upsample"]
+            if m not in include_modules
+        ]
         state_dict = {
             name: param
             for name, param in self.named_parameters()
