@@ -3,7 +3,7 @@ name = "kanade-tokenizer"
 version = "0.1.0"
 description = "Kanade is a speech tokenizer that encodes speech into compact content tokens and global embeddings and decodes them back to mel spectrograms."
 readme = "README.md"
-requires-python = ">=3.12"
+requires-python = ">=3.10"
 dependencies = [
   "huggingface_hub",
   "jsonargparse[signatures]",
