@@ -20,9 +20,6 @@ try:
     FLASH_ATTN_AVAILABLE = True
 except ImportError:
     FLASH_ATTN_AVAILABLE = False
-    logger.warning(
-        "FlashAttention is not installed. Falling back to PyTorch SDPA implementation. There is no warranty that the model will work correctly."
-    )
 
 
 def precompute_freqs_cis(dim: int, end: int, theta: float = 10000.0):
